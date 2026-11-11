@@ -1,0 +1,45 @@
+{
+  "name": "@yourfam/yf-empty",
+  "version": "0.1.0",
+  "description": "Empty file contents and leave the files in place",
+  "type": "module",
+  "bin": {
+    "yf-empty": "bin/yf-empty.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "yf-empty": "node ./bin/yf-empty.js"
+  },
+  "keywords": [
+    "empty",
+    "truncate",
+    "files",
+    "cli"
+  ],
+  "author": {
+    "name": "YourFam",
+    "email": "kamal@yourfam.co",
+    "url": "https://github.com/YourFam"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YourFam/yf-empty.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YourFam/yf-empty/issues"
+  },
+  "homepage": "https://github.com/YourFam/yf-empty#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

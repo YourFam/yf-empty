@@ -1,0 +1,43 @@
+{
+  "name": "yf-git-empty",
+  "version": "0.1.0",
+  "description": "Unscoped alias of @yourfam/yf-empty — empty file contents and leave the files",
+  "type": "module",
+  "bin": {
+    "yf-empty": "bin/yf-empty.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "empty",
+    "truncate",
+    "files",
+    "cli"
+  ],
+  "author": {
+    "name": "YourFam",
+    "email": "kamal@yourfam.co",
+    "url": "https://github.com/YourFam"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YourFam/yf-empty.git",
+    "directory": "alias"
+  },
+  "bugs": {
+    "url": "https://github.com/YourFam/yf-empty/issues"
+  },
+  "homepage": "https://github.com/YourFam/yf-empty#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@yourfam/yf-empty": "0.1.0"
+  }
+}
