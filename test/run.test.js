@@ -14,6 +14,24 @@ test("bin --version prints the package version", () => {
   assert.equal(result.stdout.trim(), pkg.version);
 });
 
+test("--this-folder empties files in the directory where the command runs", () => {
+  const dir = tempDir();
+  try {
+    writeRel(dir, "a.txt", "hello");
+    writeRel(dir, "b.txt", "there");
+    writeRel(dir, "sub/c.txt", "keep");
+    const result = run(["--this-folder"], dir);
+    assert.equal(result.code, 0);
+    assert.equal(readFileSync(path.join(dir, "a.txt"), "utf8"), "");
+    assert.equal(readFileSync(path.join(dir, "b.txt"), "utf8"), "");
+    assert.equal(readFileSync(path.join(dir, "sub", "c.txt"), "utf8"), "keep");
+    assert.match(result.err, /emptied a\.txt/);
+    assert.doesNotMatch(result.err, /c\.txt/);
+  } finally {
+    remove(dir);
+  }
+});
+
 test("a folder alone empties only the files directly inside it", () => {
   const dir = tempDir();
   try {

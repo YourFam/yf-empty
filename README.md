@@ -42,12 +42,14 @@ With `-D`, plain `yf-empty` is not on your PATH. Use `npx yf-empty`.
 
 ```bash
 yf-empty <folder> [file...]
+yf-empty --this-folder
 ```
 
 ```bash
 yf-empty notes
 yf-empty notes a.txt b.txt
 yf-empty notes draft/a.txt
+yf-empty --this-folder
 ```
 
 A folder alone empties every file sitting directly in that folder. Files in subfolders stay as they are. Dotfiles in that folder are included.
@@ -56,7 +58,7 @@ File names are relative to the folder. Only those files are emptied. `../secret.
 
 Symlinks are refused, so a shortcut is not followed into another file. Directories are not removed. Git is not read and not changed. If the empty files should be recorded, commit them yourself.
 
-The folder is required. `yf-empty` with no arguments prints an error instead of blanking the current directory.
+`--this-folder` empties the files in the directory where you run the command. It does not take a folder name. `yf-empty` with no arguments prints an error instead of blanking the current directory.
 
 Each emptied file is printed to stderr as `emptied a.txt`. An empty folder prints `emptied 0 files`.
 

@@ -19,6 +19,17 @@ test("help and version do not require a folder", () => {
   assert.equal(parseArgs(sh("--", "--weird")).folder, "--weird");
 });
 
+test("--this-folder uses the current directory and no folder name", () => {
+  const args = parseArgs(sh("--this-folder"));
+  assert.equal(args.thisFolder, true);
+  assert.equal(args.folder, ".");
+  assert.deepEqual(args.files, []);
+  assert.throws(
+    () => parseArgs(sh("--this-folder", "notes")),
+    (err) => err instanceof CliError && /does not take a folder name/.test(err.message),
+  );
+});
+
 test("missing folder and unknown flag", () => {
   assert.throws(() => parseArgs(sh()), (err) => err instanceof CliError && /Missing folder/.test(err.message));
   assert.throws(() => parseArgs(sh("--nope")), (err) => err instanceof CliError && /Unknown flag/.test(err.message));
@@ -28,6 +39,7 @@ test("help names the command", () => {
   const text = helpText();
   assert.match(text, /^yf-empty /);
   assert.match(text, /subfolders are left alone/i);
+  assert.match(text, /--this-folder/);
   assert.match(text, /symlink/i);
   assert.match(text, /does not|Git is not changed/);
 });
