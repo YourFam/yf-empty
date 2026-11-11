@@ -1,6 +1,6 @@
 {
   "name": "yf-git-empty",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Unscoped alias of @yourfam/yf-empty — empty file contents and leave the files",
   "type": "module",
   "bin": {
@@ -38,6 +38,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@yourfam/yf-empty": "0.1.0"
+    "@yourfam/yf-empty": "0.1.1"
   }
 }
