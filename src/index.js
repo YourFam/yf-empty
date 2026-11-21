@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { helpText, parseArgs } from "./args.js";
+import { destructiveWarning, promptYes } from "./confirm.js";
 import { emptyTargets, planEmpty } from "./empty.js";
 import { CliError } from "./errors.js";
 
@@ -15,6 +16,8 @@ function defaultDeps() {
     version: pkg.version,
     log: (msg) => console.log(msg),
     err: (msg) => console.error(msg),
+    isTTY: () => Boolean(process.stdin.isTTY),
+    confirm: promptYes,
   };
 }
 
@@ -34,6 +37,13 @@ function execute(args, deps) {
 
   const folder = path.resolve(deps.cwd, args.folder);
   const targets = planEmpty(folder, args.files);
+  if (!args.yes) {
+    if (!deps.isTTY()) {
+      throw new CliError("Refusing to empty files without a prompt. Pass --y to continue.");
+    }
+    const ok = deps.confirm(destructiveWarning(args, targets));
+    if (!ok) throw new CliError("Aborted.");
+  }
   emptyTargets(targets);
   if (targets.length === 0) {
     deps.err("emptied 0 files");

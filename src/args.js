@@ -5,6 +5,7 @@ import { CliError } from "./errors.js";
  * @property {boolean} help
  * @property {boolean} version
  * @property {boolean} thisFolder
+ * @property {boolean} yes
  * @property {string | null} folder
  * @property {string[]} files
  */
@@ -18,6 +19,7 @@ export function parseArgs(argv) {
   let help = false;
   let version = false;
   let thisFolder = false;
+  let yes = false;
   /** @type {string[]} */
   const positionals = [];
 
@@ -39,6 +41,10 @@ export function parseArgs(argv) {
       thisFolder = true;
       continue;
     }
+    if (arg === "--y") {
+      yes = true;
+      continue;
+    }
     if (arg.startsWith("-")) {
       throw new CliError(`Unknown flag: ${arg}\nSee yf-empty --help`);
     }
@@ -57,6 +63,7 @@ export function parseArgs(argv) {
     help,
     version,
     thisFolder,
+    yes,
     folder: thisFolder ? "." : (positionals[0] ?? null),
     files: thisFolder ? [] : positionals.slice(1),
   };
@@ -67,12 +74,17 @@ export function helpText() {
 
 Usage:
   yf-empty <folder> [file...]
+  yf-empty --y <folder> [file...]
   yf-empty --this-folder
 
 With only a folder, every file directly in that folder is emptied.
 Files in subfolders are left alone.
 With file names, only those files are emptied. A name is relative to
 the folder, so notes/a.txt is allowed. A path outside the folder is refused.
+
+Before any file is changed, the command warns that this will empty the
+files in that folder, or the given files, and continues only when you
+press Y. --y skips that prompt because you already approved it.
 
 --this-folder empties the files in the directory where you run the command.
 It does not take a folder name.

@@ -42,6 +42,7 @@ With `-D`, plain `yf-empty` is not on your PATH. Use `npx yf-empty`.
 
 ```bash
 yf-empty <folder> [file...]
+yf-empty --y <folder> [file...]
 yf-empty --this-folder
 ```
 
@@ -50,7 +51,19 @@ yf-empty notes
 yf-empty notes a.txt b.txt
 yf-empty notes draft/a.txt
 yf-empty --this-folder
+yf-empty --y notes
 ```
+
+The command warns before it changes anything:
+
+```text
+Destructive: this will empty the files in notes.
+Press Y to continue:
+```
+
+With file names, the warning names those files. Type `Y` and press Enter. Any other answer leaves every file as it is.
+
+`--y` skips that prompt. You already approved the empty, so the command runs. A script or a non-interactive shell has no prompt to answer: pass `--y`, or the command refuses and changes nothing.
 
 A folder alone empties every file sitting directly in that folder. Files in subfolders stay as they are. Dotfiles in that folder are included.
 

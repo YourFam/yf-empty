@@ -30,9 +30,20 @@ test("--this-folder uses the current directory and no folder name", () => {
   );
 });
 
+test("--y is explicit approval and is not a file name", () => {
+  const args = parseArgs(sh("--y", "notes", "a.txt"));
+  assert.equal(args.yes, true);
+  assert.equal(args.folder, "notes");
+  assert.deepEqual(args.files, ["a.txt"]);
+  assert.equal(parseArgs(sh("notes", "--y")).yes, true);
+  assert.equal(parseArgs(sh("--y", "--this-folder")).yes, true);
+  assert.equal(parseArgs(sh("notes")).yes, false);
+});
+
 test("missing folder and unknown flag", () => {
   assert.throws(() => parseArgs(sh()), (err) => err instanceof CliError && /Missing folder/.test(err.message));
   assert.throws(() => parseArgs(sh("--nope")), (err) => err instanceof CliError && /Unknown flag/.test(err.message));
+  assert.throws(() => parseArgs(sh("-y", "notes")), (err) => err instanceof CliError && /Unknown flag/.test(err.message));
 });
 
 test("help names the command", () => {
@@ -40,6 +51,8 @@ test("help names the command", () => {
   assert.match(text, /^yf-empty /);
   assert.match(text, /subfolders are left alone/i);
   assert.match(text, /--this-folder/);
+  assert.match(text, /--y/);
+  assert.match(text, /press Y/i);
   assert.match(text, /symlink/i);
   assert.match(text, /does not|Git is not changed/);
 });

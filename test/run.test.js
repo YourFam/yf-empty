@@ -20,7 +20,7 @@ test("--this-folder empties files in the directory where the command runs", () =
     writeRel(dir, "a.txt", "hello");
     writeRel(dir, "b.txt", "there");
     writeRel(dir, "sub/c.txt", "keep");
-    const result = run(["--this-folder"], dir);
+    const result = run(["--y", "--this-folder"], dir);
     assert.equal(result.code, 0);
     assert.equal(readFileSync(path.join(dir, "a.txt"), "utf8"), "");
     assert.equal(readFileSync(path.join(dir, "b.txt"), "utf8"), "");
@@ -39,7 +39,7 @@ test("a folder alone empties only the files directly inside it", () => {
     writeRel(dir, "notes/b.txt", "there");
     writeRel(dir, "notes/.env", "SECRET=1");
     writeRel(dir, "notes/sub/c.txt", "keep");
-    const result = run(["notes"], dir);
+    const result = run(["--y", "notes"], dir);
     assert.equal(result.code, 0);
     assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "");
     assert.equal(readFileSync(path.join(dir, "notes", "b.txt"), "utf8"), "");
@@ -60,7 +60,7 @@ test("named files are the only ones emptied, including a nested name", () => {
     writeRel(dir, "notes/a.txt", "hello");
     writeRel(dir, "notes/b.txt", "keep");
     writeRel(dir, "notes/sub/c.txt", "nested");
-    const result = run(["notes", "a.txt", "sub/c.txt", "a.txt"], dir);
+    const result = run(["notes", "--y", "a.txt", "sub/c.txt", "a.txt"], dir);
     assert.equal(result.code, 0);
     assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "");
     assert.equal(readFileSync(path.join(dir, "notes", "b.txt"), "utf8"), "keep");
@@ -123,10 +123,115 @@ test("an empty folder reports zero files", () => {
   const dir = tempDir();
   try {
     writeRel(dir, "notes/sub/c.txt", "keep");
-    const result = run(["notes"], dir);
+    const result = run(["--y", "notes"], dir);
     assert.equal(result.code, 0);
     assert.equal(result.err, "emptied 0 files\n");
     assert.equal(readFileSync(path.join(dir, "notes", "sub", "c.txt"), "utf8"), "keep");
+  } finally {
+    remove(dir);
+  }
+});
+
+test("a folder asks before emptying, and only Y continues", () => {
+  const dir = tempDir();
+  try {
+    writeRel(dir, "notes/a.txt", "hello");
+    writeRel(dir, "notes/b.txt", "there");
+    const declined = run(["notes"], dir, { confirm: () => false });
+    assert.equal(declined.code, 1);
+    assert.match(declined.err, /Aborted/);
+    assert.match(declined.prompts[0], /Destructive: this will empty the files in notes\./);
+    assert.match(declined.prompts[0], /Press Y to continue:/);
+    assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "hello");
+
+    const accepted = run(["notes"], dir, { confirm: () => true });
+    assert.equal(accepted.code, 0);
+    assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "");
+    assert.equal(readFileSync(path.join(dir, "notes", "b.txt"), "utf8"), "");
+  } finally {
+    remove(dir);
+  }
+});
+
+test("named files warn about those files, and --y does not ask", () => {
+  const dir = tempDir();
+  try {
+    writeRel(dir, "notes/a.txt", "hello");
+    writeRel(dir, "notes/b.txt", "keep");
+    const asked = run(["notes", "a.txt"], dir, { confirm: () => false });
+    assert.match(asked.prompts[0], /this will empty the given files: a\.txt/);
+    assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "hello");
+
+    let askedWithYes = false;
+    const skipped = run(["--y", "notes", "a.txt"], dir, {
+      confirm: () => {
+        askedWithYes = true;
+        return false;
+      },
+    });
+    assert.equal(askedWithYes, false);
+    assert.equal(skipped.code, 0);
+    assert.equal(skipped.prompts.length, 0);
+    assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "");
+    assert.equal(readFileSync(path.join(dir, "notes", "b.txt"), "utf8"), "keep");
+  } finally {
+    remove(dir);
+  }
+});
+
+test("--this-folder warns about this folder", () => {
+  const dir = tempDir();
+  try {
+    writeRel(dir, "a.txt", "hello");
+    const result = run(["--this-folder"], dir, { confirm: () => false });
+    assert.equal(result.code, 1);
+    assert.match(result.prompts[0], /this will empty the files in this folder/);
+    assert.equal(readFileSync(path.join(dir, "a.txt"), "utf8"), "hello");
+  } finally {
+    remove(dir);
+  }
+});
+
+test("a non-interactive shell refuses unless --y is passed", () => {
+  const dir = tempDir();
+  try {
+    writeRel(dir, "notes/a.txt", "hello");
+    let asked = false;
+    const refused = run(["notes"], dir, {
+      isTTY: () => false,
+      confirm: () => {
+        asked = true;
+        return true;
+      },
+    });
+    assert.equal(refused.code, 1);
+    assert.equal(asked, false);
+    assert.match(refused.err, /Pass --y/);
+    assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "hello");
+
+    const approved = run(["--y", "notes"], dir, { isTTY: () => false });
+    assert.equal(approved.code, 0);
+    assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "");
+  } finally {
+    remove(dir);
+  }
+});
+
+test("a bad path fails before the prompt", () => {
+  const dir = tempDir();
+  try {
+    writeRel(dir, "notes/a.txt", "hello");
+    let asked = false;
+    const result = run(["notes", "missing.txt"], dir, {
+      confirm: () => {
+        asked = true;
+        return true;
+      },
+    });
+    assert.equal(result.code, 1);
+    assert.equal(asked, false);
+    assert.match(result.err, /File not found/);
+    assert.equal(readFileSync(path.join(dir, "notes", "a.txt"), "utf8"), "hello");
   } finally {
     remove(dir);
   }
@@ -149,7 +254,7 @@ test("symlinks are refused and the target is left alone", () => {
     assert.match(named.err, /symlink/);
     assert.equal(readFileSync(path.join(dir, "notes", "real.txt"), "utf8"), "keep");
 
-    const all = run(["notes"], dir);
+    const all = run(["--y", "notes"], dir);
     assert.equal(all.code, 0);
     assert.equal(readFileSync(path.join(dir, "notes", "real.txt"), "utf8"), "");
     assert.match(all.err, /emptied real\.txt/);
