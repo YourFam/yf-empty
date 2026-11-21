@@ -1,6 +1,6 @@
 {
   "name": "@yourfam/yf-empty",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Empty file contents and leave the files in place",
   "type": "module",
   "bin": {
